@@ -48,7 +48,7 @@ spec:
         {{- if .Values.sidecar.enabled }}
         - env:
           {{- if .Values.sidecar.extraEnv }}
-          {{- toYaml .Values.sidecar.extraEnv  | nindent 10 }}
+          {{- toYaml .Values.sidecar.extraEnv  | nindent 12 }}
           {{- end }}
           - name: METHOD
             value: {{ .Values.sidecar.env.method }}
@@ -78,6 +78,12 @@ spec:
                 key: {{ .Values.sidecar.env.passwordFromExistingSecret.key }}
                 name: {{ .Values.sidecar.env.passwordFromExistingSecret.name }}
             {{- end }}
+          {{- end }}
+          {{- if .Values.sidecar.envFrom }}
+          {{- with .Values.sidecar.envFrom }}
+          envFrom:
+            {{- toYaml . | indent 12 }}
+          {{- end }}
           {{- end }}
           image: "{{ .Values.sidecar.image.registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
           imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
@@ -109,6 +115,12 @@ spec:
           {{- end }}
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.envFrom }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
+          {{- end }}
           {{- if or .Values.metrics.enabled .Values.env }}
           env:
           {{- if .Values.metrics.enabled}}
