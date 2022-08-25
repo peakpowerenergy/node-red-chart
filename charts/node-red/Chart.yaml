@@ -1,9 +1,11 @@
 apiVersion: v2
 name: node-red
-description: A Helm chart for Node-Red, a low-code programming for event-driven applications
+description: |
+  A Helm chart for Node-Red, a low-code programming for event-driven applications.
+  Original chart made by https://github.com/SchwarzIT/node-red-chart
 home: https://nodered.org/
 sources:
-  - https://github.com/SchwarzIT/node-red-chart
+  - https://github.com/peakpowerenergy/node-red-chart
 
 icon: https://nodered.org/about/resources/media/node-red-icon-2.png
 
@@ -19,12 +21,12 @@ keywords:
   - automation
 
 maintainers:
-  - name: dirien
-    email: engin.diri@mail.schwarz
-    url: https://jobs.schwarz
-  - name: Kaktor
-    email: felix.kammerer@mail.schwarz
-    url: https://jobs.schwarz
+  - name: Kevin Delisle
+    email: kevin.delisle@peakpowerenergy.com
+    url: https://peakpowerenergy.com
+  - name: DevOps
+    email: devops@peakpowerenergy.com
+    url: https://peakpowerenergy.com
 
 annotations:
   artifacthub.io/containsSecurityUpdates: "false"
@@ -38,9 +40,7 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/links: |
     - name: website
-      url: https://jobs.schwarz
+      url: https://peakpowerenergy.com
   artifacthub.io/maintainers: |
-    - name: dirien
-      email: engin.diri@mail.schwarz
-    - name: Kaktor
-      email: felix.kammerer@mail.schwarz
+    - name: DevOps
+      email: devops@peakpowerenergy.com
