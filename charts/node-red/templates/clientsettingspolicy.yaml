@@ -1,0 +1,17 @@
+{{- if and .Values.listenerSet .Values.listenerSet.enabled .Values.listenerSet.clientSettings }}
+{{- $settings := omit .Values.listenerSet.clientSettings "enabled" }}
+{{- if $settings }}
+apiVersion: gateway.nginx.org/v1alpha1
+kind: ClientSettingsPolicy
+metadata:
+  name: {{ include "node-red.fullname" . }}
+  labels:
+    {{- include "node-red.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: {{ include "node-red.fullname" . }}
+  {{- toYaml $settings | nindent 2 }}
+{{- end }}
+{{- end }}

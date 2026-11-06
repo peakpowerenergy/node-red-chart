@@ -1,0 +1,36 @@
+{{- if and .Values.listenerSet .Values.listenerSet.enabled }}
+{{- if and .Values.ingress .Values.ingress.enabled }}
+{{- fail "listenerSet.enabled and ingress.enabled cannot both be true" }}
+{{- end }}
+{{- $listeners := .Values.listenerSet.listeners | default list }}
+{{- if not $listeners }}
+{{- fail "listenerSet.listeners is required when listenerSet.enabled is true" }}
+{{- end }}
+{{- if and (not .Values.listenerSet.parentRef) (or (not .Values.listenerSet.gateway) (not .Values.listenerSet.gateway.name) (not .Values.listenerSet.gateway.namespace)) }}
+{{- fail "listenerSet.gateway.name and listenerSet.gateway.namespace are required when listenerSet.parentRef is empty" }}
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: ListenerSet
+metadata:
+  name: {{ include "node-red.fullname" . }}
+  labels:
+    {{- include "node-red.labels" . | nindent 4 }}
+  {{- with .Values.listenerSet.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRef:
+    {{- if .Values.listenerSet.parentRef }}
+    {{- omit .Values.listenerSet.parentRef "enabled" | toYaml | nindent 4 }}
+    {{- else }}
+    name: {{ .Values.listenerSet.gateway.name | quote }}
+    namespace: {{ .Values.listenerSet.gateway.namespace | quote }}
+    kind: Gateway
+    group: gateway.networking.k8s.io
+    {{- end }}
+  listeners:
+    {{- range $listeners }}
+    - {{- omit . "enabled" | toYaml | nindent 6 }}
+    {{- end }}
+{{- end }}

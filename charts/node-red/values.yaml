@@ -133,6 +133,30 @@ persistence:
 # -- containers which are run before the app containers are started
 initContainers: []
 
+listenerSet:
+  # -- Attach this release to a Gateway listener set. Leave false to keep using Ingress.
+  enabled: false
+  gateway:
+    # -- Gateway name when parentRef is empty
+    name: ""
+    # -- Gateway namespace when parentRef is empty
+    namespace: ""
+  # -- Full parentRef. Empty uses gateway.name and gateway.namespace.
+  parentRef: {}
+  # -- Annotations on the ListenerSet, including the cert-manager issuer
+  annotations: {}
+  # -- ListenerSet spec.listeners. Each entry sets its own protocol and tls.
+  listeners: []
+  # -- Rendered when this object has keys. parentRefs default to the HTTP and HTTPS listeners.
+  httpRoute: {}
+  # -- ClientSettingsPolicy. body.maxSize replaces proxy-body-size.
+  clientSettings: {}
+  # -- HTTPRoute on the Gateway http listener. Defaults redirect to https.
+  httpRedirect:
+    sectionName: http
+    scheme: https
+    statusCode: 301
+
 ingress:
   # -- Enable an ingress resource for the server
   enabled: false
