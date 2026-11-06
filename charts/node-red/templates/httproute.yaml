@@ -1,0 +1,64 @@
+{{- define "node-red.listenerHostnames" -}}
+{{- $hosts := list -}}
+{{- if and .Values.listenerSet.httpRoute .Values.listenerSet.httpRoute.hostnames -}}
+{{- $hosts = .Values.listenerSet.httpRoute.hostnames -}}
+{{- else -}}
+{{- range (.Values.listenerSet.listeners | default list) -}}
+{{- if and .hostname (or (eq (toString .protocol) "HTTP") (eq (toString .protocol) "HTTPS")) (not (has (toString .hostname) $hosts)) -}}
+{{- $hosts = append $hosts (toString .hostname) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if not $hosts -}}
+{{- fail "listenerSet.httpRoute.hostnames or a listener hostname is required" -}}
+{{- end -}}
+{{- toYaml $hosts -}}
+{{- end -}}
+
+{{- if and .Values.listenerSet .Values.listenerSet.enabled }}
+{{- if or .Values.listenerSet.httpRoute.hostnames .Values.listenerSet.httpRoute.rules .Values.listenerSet.httpRoute.parentRefs .Values.listenerSet.httpRoute.annotations }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "node-red.fullname" . }}
+  labels:
+    {{- include "node-red.labels" . | nindent 4 }}
+  {{- with .Values.listenerSet.httpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- if .Values.listenerSet.httpRoute.parentRefs }}
+    {{- toYaml .Values.listenerSet.httpRoute.parentRefs | nindent 4 }}
+    {{- else }}
+    {{- $n := 0 }}
+    {{- range (.Values.listenerSet.listeners | default list) }}
+    {{- if or (eq (toString .protocol) "HTTP") (eq (toString .protocol) "HTTPS") }}
+    {{- $n = add $n 1 }}
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: {{ include "node-red.fullname" $ }}
+      sectionName: {{ .name | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if eq $n 0 }}
+    {{- fail "listenerSet.httpRoute requires an HTTP or HTTPS listener, or parentRefs" }}
+    {{- end }}
+    {{- end }}
+  hostnames:
+    {{- include "node-red.listenerHostnames" . | nindent 4 }}
+  rules:
+    {{- if .Values.listenerSet.httpRoute.rules }}
+    {{- toYaml .Values.listenerSet.httpRoute.rules | nindent 4 }}
+    {{- else }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ include "node-red.fullname" . }}
+          port: {{ .Values.service.port }}
+    {{- end }}
+{{- end }}
+{{- end }}
