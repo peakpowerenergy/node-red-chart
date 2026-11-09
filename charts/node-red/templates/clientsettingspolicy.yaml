@@ -1,17 +1,23 @@
-{{- if and .Values.listenerSet .Values.listenerSet.enabled .Values.listenerSet.clientSettings }}
-{{- $settings := omit .Values.listenerSet.clientSettings "enabled" }}
+{{/*
+ClientSettingsPolicy has a single targetRef, so each route gets its own policy.
+*/}}
+{{- $settings := omit (.Values.routeDefaults.clientSettings | default dict) "enabled" }}
 {{- if $settings }}
+{{- range $name := (include "node-red.routes.proxied" . | fromJsonArray) }}
+---
 apiVersion: gateway.nginx.org/v1alpha1
 kind: ClientSettingsPolicy
 metadata:
-  name: {{ include "node-red.fullname" . }}
+  name: {{ $name }}
+  {{- with (include "node-red.gateway.labels" $ | trim) }}
   labels:
-    {{- include "node-red.labels" . | nindent 4 }}
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute
-    name: {{ include "node-red.fullname" . }}
+    name: {{ $name }}
   {{- toYaml $settings | nindent 2 }}
 {{- end }}
 {{- end }}

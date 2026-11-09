@@ -1,0 +1,20 @@
+{{- $settings := omit (.Values.routeDefaults.proxySettings | default dict) "enabled" }}
+{{- $routes := include "node-red.routes.proxied" . | fromJsonArray }}
+{{- if and $settings $routes }}
+apiVersion: gateway.nginx.org/v1alpha1
+kind: ProxySettingsPolicy
+metadata:
+  name: {{ include "node-red.gateway.fullname" . }}
+  {{- with (include "node-red.gateway.labels" . | trim) }}
+  labels:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  targetRefs:
+    {{- range $routes }}
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: {{ . }}
+    {{- end }}
+  {{- toYaml $settings | nindent 2 }}
+{{- end }}

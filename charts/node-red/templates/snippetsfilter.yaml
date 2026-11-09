@@ -1,0 +1,26 @@
+{{- if and .Values.routeDefaults.cors .Values.routeDefaults.cors.enabled .Values.routes }}
+apiVersion: gateway.nginx.org/v1alpha1
+kind: SnippetsFilter
+metadata:
+  name: {{ include "node-red.gateway.fullname" . }}-snippets
+  {{- with (include "node-red.gateway.labels" . | trim) }}
+  labels:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  snippets:
+    - context: http.server.location
+      value: |
+        add_header Access-Control-Allow-Origin {{ .Values.routeDefaults.cors.allowOrigin | default "*" | quote }} always;
+        add_header Access-Control-Allow-Methods {{ .Values.routeDefaults.cors.allowMethods | default "GET, PUT, POST, DELETE, PATCH, OPTIONS" | quote }} always;
+        {{- with .Values.routeDefaults.cors.allowHeaders }}
+        add_header Access-Control-Allow-Headers {{ . | quote }} always;
+        {{- end }}
+        {{- with .Values.routeDefaults.cors.exposeHeaders }}
+        add_header Access-Control-Expose-Headers {{ . | quote }} always;
+        {{- end }}
+        {{- if .Values.routeDefaults.cors.allowCredentials }}
+        add_header Access-Control-Allow-Credentials "true" always;
+        {{- end }}
+        if ($request_method = OPTIONS) { return 204; }
+{{- end }}

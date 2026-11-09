@@ -134,8 +134,6 @@ persistence:
 initContainers: []
 
 listenerSet:
-  # -- Attach this release to a Gateway listener set. Leave false to keep using Ingress.
-  enabled: false
   gateway:
     # -- Gateway name when parentRef is empty
     name: ""
@@ -145,17 +143,21 @@ listenerSet:
   parentRef: {}
   # -- Annotations on the ListenerSet, including the cert-manager issuer
   annotations: {}
-  # -- ListenerSet spec.listeners. Each entry sets its own protocol and tls.
+  # -- ListenerSet spec.listeners. The ListenerSet renders when this is set. Leave empty to keep using Ingress.
   listeners: []
-  # -- Rendered when this object has keys. parentRefs default to the HTTP and HTTPS listeners.
-  httpRoute: {}
+
+# -- Policies applied to every HTTPRoute in routes
+routeDefaults:
   # -- ClientSettingsPolicy. body.maxSize replaces proxy-body-size.
   clientSettings: {}
-  # -- HTTPRoute on the Gateway http listener. Defaults redirect to https.
-  httpRedirect:
-    sectionName: http
-    scheme: https
-    statusCode: 301
+  # -- ProxySettingsPolicy
+  proxySettings: {}
+  # -- SnippetsFilter that adds CORS headers
+  cors:
+    enabled: false
+
+# -- Routes, each with a type of HTTPRoute or HTTPSRedirect. An entry with no name renders the fullname, an HTTPSRedirect renders <fullname>-http, and a named entry renders <fullname>-<name>. Unset parentRefs and hostnames come from the listeners.
+routes: []
 
 ingress:
   # -- Enable an ingress resource for the server

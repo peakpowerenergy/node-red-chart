@@ -29,7 +29,7 @@ maintainers:
 annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
-    - add ListenerSet, HTTPRoute, and ClientSettingsPolicy, off by default
+    - add ListenerSet, HTTPRoute, and NGINX Gateway Fabric policies, off by default
   artifacthub.io/images: |
     - name: node-red
       image: docker.io/nodered/node-red:2.2.2
