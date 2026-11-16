@@ -1,0 +1,23 @@
+{{/*
+ClientSettingsPolicy has a single targetRef, so each route gets its own policy.
+*/}}
+{{- $settings := omit (.Values.routeDefaults.clientSettings | default dict) "enabled" }}
+{{- if $settings }}
+{{- range $name := (include "node-red.routes.proxied" . | fromJsonArray) }}
+---
+apiVersion: gateway.nginx.org/v1alpha1
+kind: ClientSettingsPolicy
+metadata:
+  name: {{ $name }}
+  {{- with (include "node-red.gateway.labels" $ | trim) }}
+  labels:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: {{ $name }}
+  {{- toYaml $settings | nindent 2 }}
+{{- end }}
+{{- end }}

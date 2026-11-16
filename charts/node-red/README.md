@@ -76,6 +76,11 @@ The command removes all the Kubernetes components associated with the chart and 
 | ingress.hosts[0].paths[0].pathType | string | `"Prefix"` | Ingress type of path |
 | ingress.tls | list | `[]` | Ingress TLS configuration |
 | initContainers | list | `[]` | containers which are run before the app containers are started |
+| listenerSet.annotations | object | `{}` | Annotations on the ListenerSet, including the cert-manager issuer |
+| listenerSet.gateway.name | string | `""` | Gateway name when parentRef is empty |
+| listenerSet.gateway.namespace | string | `""` | Gateway namespace when parentRef is empty |
+| listenerSet.listeners | list | `[]` | ListenerSet spec.listeners. The ListenerSet renders when this is set. Leave empty to keep using Ingress. |
+| listenerSet.parentRef | object | `{}` | Full parentRef. Empty uses gateway.name and gateway.namespace. |
 | metrics.enabled | bool | `false` | Deploy metrics service |
 | metrics.path | string | `"/metrics"` |  |
 | metrics.serviceMonitor.additionalLabels | object | `{}` | Prometheus ServiceMonitor labels |
@@ -99,6 +104,11 @@ The command removes all the Kubernetes components associated with the chart and 
 | podSecurityContext.runAsUser | int | `1000` | node-red user is 1000 |
 | replicaCount | int | `1` | Number of nodes |
 | resources | object | `{}` | CPU/Memory resource requests/limits |
+| routeDefaults | object | `{"clientSettings":{},"cors":{"enabled":false},"proxySettings":{}}` | Policies applied to every HTTPRoute in routes |
+| routeDefaults.clientSettings | object | `{}` | ClientSettingsPolicy. body.maxSize replaces proxy-body-size. |
+| routeDefaults.cors | object | `{"enabled":false}` | SnippetsFilter that adds CORS headers |
+| routeDefaults.proxySettings | object | `{}` | ProxySettingsPolicy |
+| routes | list | `[]` | Routes, each with a type of HTTPRoute or HTTPSRedirect. An entry with no name renders the fullname, an HTTPSRedirect renders <fullname>-http, and a named entry renders <fullname>-<name>. Unset parentRefs and hostnames come from the listeners. |
 | securityContext | object | `{}` | Security Context see [values.yaml](values.yaml) |
 | service.port | int | `1880` | Kubernetes port where service is exposed |
 | service.type | string | `"ClusterIP"` | Kubernetes service type |

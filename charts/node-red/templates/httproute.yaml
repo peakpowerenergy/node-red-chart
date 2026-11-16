@@ -1,0 +1,89 @@
+{{- range $route := (.Values.routes | default list) }}
+{{- $redirect := eq (toString $route.type) "HTTPSRedirect" }}
+{{- if ne (toString $route.enabled) "false" }}
+{{- if and $redirect $route.rules }}
+{{- fail (printf "route %s is an HTTPSRedirect, so it can't set rules. Use an HTTPRoute for a custom redirect" (include "node-red.routes.name" (list $ $route))) }}
+{{- end }}
+{{- $annotations := $route.annotations }}
+{{- if and $redirect (not $annotations) }}
+{{- range $other := $.Values.routes }}
+{{- if and (not $annotations) (eq (toString $other.type) "HTTPRoute") }}
+{{- $annotations = $other.annotations }}
+{{- end }}
+{{- end }}
+{{- end }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "node-red.routes.name" (list $ $route) }}
+  {{- with (include "node-red.gateway.labels" $ | trim) }}
+  labels:
+    {{- . | nindent 4 }}
+  {{- end }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- if $route.parentRefs }}
+    {{- toYaml $route.parentRefs | nindent 4 }}
+    {{- else if $redirect }}
+    {{- $parent := $.Values.listenerSet.parentRef | default $.Values.listenerSet.gateway }}
+    {{- if not (and $parent $parent.name) }}
+    {{- fail "an HTTPSRedirect needs listenerSet.gateway, listenerSet.parentRef or its own parentRefs" }}
+    {{- end }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ $parent.name | quote }}
+      namespace: {{ $parent.namespace | default $.Release.Namespace | quote }}
+      sectionName: http
+    {{- else }}
+    {{- $n := 0 }}
+    {{- range ($.Values.listenerSet.listeners | default list) }}
+    {{- if or (eq (toString .protocol) "HTTP") (eq (toString .protocol) "HTTPS") }}
+    {{- $n = add $n 1 }}
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: {{ include "node-red.gateway.fullname" $ }}
+      sectionName: {{ .name | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if eq $n 0 }}
+    {{- fail (printf "route %s requires an HTTP or HTTPS listener, or parentRefs" (include "node-red.routes.name" (list $ $route))) }}
+    {{- end }}
+    {{- end }}
+  hostnames:
+    {{- include "node-red.gateway.hostnames" (list $ $route) | nindent 4 }}
+  rules:
+    {{- if $redirect }}
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: {{ $route.statusCode | default 301 }}
+    {{- else if $route.rules }}
+    {{- range $rule := $route.rules }}
+    {{- $out := deepCopy $rule }}
+    {{- $extra := include "node-red.gateway.snippetFilter" $ | fromYamlArray }}
+    {{- if and $extra $out.backendRefs }}
+    {{- $out = set $out "filters" (concat ($out.filters | default list) $extra) }}
+    {{- end }}
+    - {{- toYaml $out | nindent 6 }}
+    {{- end }}
+    {{- else }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ include "node-red.fullname" $ }}
+          port: {{ $.Values.service.port }}
+      {{- with (include "node-red.gateway.snippetFilter" $) }}
+      filters:
+        {{- . | nindent 8 }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

@@ -133,6 +133,32 @@ persistence:
 # -- containers which are run before the app containers are started
 initContainers: []
 
+listenerSet:
+  gateway:
+    # -- Gateway name when parentRef is empty
+    name: ""
+    # -- Gateway namespace when parentRef is empty
+    namespace: ""
+  # -- Full parentRef. Empty uses gateway.name and gateway.namespace.
+  parentRef: {}
+  # -- Annotations on the ListenerSet, including the cert-manager issuer
+  annotations: {}
+  # -- ListenerSet spec.listeners. The ListenerSet renders when this is set. Leave empty to keep using Ingress.
+  listeners: []
+
+# -- Policies applied to every HTTPRoute in routes
+routeDefaults:
+  # -- ClientSettingsPolicy. body.maxSize replaces proxy-body-size.
+  clientSettings: {}
+  # -- ProxySettingsPolicy
+  proxySettings: {}
+  # -- SnippetsFilter that adds CORS headers
+  cors:
+    enabled: false
+
+# -- Routes, each with a type of HTTPRoute or HTTPSRedirect. An entry with no name renders the fullname, an HTTPSRedirect renders <fullname>-http, and a named entry renders <fullname>-<name>. Unset parentRefs and hostnames come from the listeners.
+routes: []
+
 ingress:
   # -- Enable an ingress resource for the server
   enabled: false
